@@ -1,0 +1,9 @@
+﻿User-agent: *
+Allow: /
+
+Disallow: /account
+Disallow: /account/
+Disallow: /checkout
+Disallow: /cart
+
+Sitemap: https://eatoreum.com/sitemap.xml

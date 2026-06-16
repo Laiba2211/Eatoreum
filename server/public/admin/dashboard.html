@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin dashboard — Eatoreum</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #09090b;
+        --card: #18181b;
+        --border: #27272a;
+        --muted: #a1a1aa;
+        --text: #fafafa;
+        --accent: #f59e0b;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        padding: 2rem;
+      }
+      a {
+        color: var(--accent);
+      }
+      pre {
+        background: var(--card);
+        border: 1px solid var(--border);
+        padding: 1rem;
+        border-radius: 8px;
+        overflow: auto;
+        font-size: 0.8rem;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Admin session</h1>
+    <p><a href="/admin/login.html">← Back to login</a></p>
+    <p id="status">Checking token…</p>
+    <pre id="out"></pre>
+    <script>
+      const token = localStorage.getItem("eatoreum_admin_token");
+      const statusEl = document.getElementById("status");
+      const out = document.getElementById("out");
+
+      if (!token) {
+        statusEl.textContent = "No token. Redirecting to login…";
+        window.location.href = "/admin/login.html";
+      } else {
+        fetch("/api/admin/auth/me", { headers: { Authorization: "Bearer " + token } })
+          .then((r) => r.json().then((j) => ({ ok: r.ok, j })))
+          .then(({ ok, j }) => {
+            if (!ok) {
+              statusEl.textContent = j.message || "Unauthorized";
+              localStorage.removeItem("eatoreum_admin_token");
+              localStorage.removeItem("eatoreum_admin_user");
+              return;
+            }
+            statusEl.textContent = "Signed in as " + (j.admin?.email || "admin");
+            out.textContent = JSON.stringify(j, null, 2);
+          })
+          .catch(() => {
+            statusEl.textContent = "Request failed";
+          });
+      }
+    </script>
+  </body>
+</html>

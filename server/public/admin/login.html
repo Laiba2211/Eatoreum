@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin login — Eatoreum</title>
+    <style>
+      :root {
+        color-scheme: dark;
+        --bg: #09090b;
+        --card: #18181b;
+        --border: #27272a;
+        --muted: #a1a1aa;
+        --text: #fafafa;
+        --accent: #f59e0b;
+        --accent-dim: #b45309;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: ui-sans-serif, system-ui, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+      }
+      .card {
+        width: 100%;
+        max-width: 400px;
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 2rem;
+      }
+      h1 {
+        margin: 0 0 0.25rem;
+        font-size: 1.25rem;
+      }
+      p.sub {
+        margin: 0 0 1.5rem;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+      label {
+        display: block;
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--muted);
+        margin-bottom: 0.35rem;
+      }
+      input {
+        width: 100%;
+        padding: 0.65rem 0.75rem;
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        background: #0a0a0b;
+        color: var(--text);
+        font-size: 0.9rem;
+        margin-bottom: 1rem;
+      }
+      input:focus {
+        outline: none;
+        border-color: var(--accent-dim);
+      }
+      button {
+        width: 100%;
+        margin-top: 0.5rem;
+        padding: 0.75rem;
+        border: none;
+        border-radius: 8px;
+        background: var(--accent);
+        color: #09090b;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+      button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+      button:hover:not(:disabled) {
+        filter: brightness(1.05);
+      }
+      .err {
+        font-size: 0.85rem;
+        color: #f87171;
+        margin-bottom: 1rem;
+        display: none;
+      }
+      .err.show {
+        display: block;
+      }
+      .hint {
+        margin-top: 1.25rem;
+        font-size: 0.75rem;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <h1>Eatoreum admin</h1>
+      <p class="sub">Sign in with your seeded admin account.</p>
+      <div id="err" class="err"></div>
+      <form id="form">
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="username" required />
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required />
+        <button type="submit" id="btn">Log in</button>
+      </form>
+      <p class="hint">
+        API: <code>POST /api/admin/auth/login</code><br />
+        After login, open <a href="/admin/dashboard.html" style="color: var(--accent)">dashboard</a> (uses stored token).
+      </p>
+    </div>
+    <script>
+      const form = document.getElementById("form");
+      const err = document.getElementById("err");
+      const btn = document.getElementById("btn");
+
+      function showError(msg) {
+        err.textContent = msg;
+        err.classList.add("show");
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        err.classList.remove("show");
+        btn.disabled = true;
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+
+        try {
+          const res = await fetch("/api/admin/auth/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) {
+            showError(data.message || "Login failed");
+            return;
+          }
+          localStorage.setItem("eatoreum_admin_token", data.token);
+          localStorage.setItem("eatoreum_admin_user", JSON.stringify(data.admin));
+          window.location.href = "/admin/dashboard.html";
+        } catch {
+          showError("Network error — is the API running?");
+        } finally {
+          btn.disabled = false;
+        }
+      });
+    </script>
+  </body>
+</html>
